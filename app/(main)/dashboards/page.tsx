@@ -8,7 +8,7 @@ import {
   getClaimsByState,
   getPaymentStats,
 } from '@/actions/dashboards'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Disclaimer } from '@/components/disclaimer'
 import { DashboardCharts } from '@/components/charts/dashboard-charts'
 import { formatCurrency } from '@/lib/utils'

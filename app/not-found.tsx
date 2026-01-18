@@ -11,7 +11,7 @@ export default function NotFound() {
           Page Not Found
         </h2>
         <p className="text-gray-600 mb-8 max-w-md">
-          The page you're looking for doesn't exist or has been moved. Try
+          The page you&apos;re looking for doesn&apos;t exist or has been moved. Try
           browsing our claims index or returning to the home page.
         </p>
         <div className="flex gap-4 justify-center">

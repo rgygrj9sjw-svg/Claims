@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // Enums
@@ -123,8 +124,7 @@ model ClaimTimelineEvent {
   claimId        String
   date           DateTime
   eventType      EventType
-  notesSanitized String?   @db.Text
-
+  notesSanitized String?   
   claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
   @@map("claim_timeline_events")
@@ -162,7 +162,7 @@ model Report {
   id             String       @id @default(cuid())
   claimId        String
   reporterUserId String
-  reason         String       @db.Text
+  reason         String
   status         ReportStatus @default(OPEN)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -178,7 +178,7 @@ model EducationArticle {
   slug             String   @unique
   title            String
   category         String
-  content          String   @db.Text
+  content          String
   lastReviewedDate DateTime @default(now())
   published        Boolean  @default(false)
   createdAt        DateTime @default(now())
