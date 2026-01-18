@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ClaimStatus {
+  PUBLISHED
+  PENDING_REVIEW
+  REJECTED
+}
+
+enum PolicyType {
+  HO
+  RENTERS
+  AUTO
+  COMMERCIAL
+}
+
+enum LossType {
+  WATER
+  FIRE
+  WIND
+  HAIL
+  THEFT
+  LIABILITY
+  OTHER
+}
+
+enum EventType {
+  REPORTED
+  FIRST_CONTACT
+  INSPECTION
+  DENIAL
+  PAYMENT
+  REOPENED
+  APPRAISAL
+  LITIGATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  ACTION_TAKEN
+}
+
+// Models
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  claims  Claim[]
+  reports Report[]
+
+  @@map("users")
+}
+
+model Carrier {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  claims Claim[]
+
+  @@map("carriers")
+}
+
+model Claim {
+  id         String      @id @default(cuid())
+  userId     String
+  carrierId  String
+  status     ClaimStatus @default(PENDING_REVIEW)
+  viewCount  Int         @default(0)
+  flagReason String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  carrier  Carrier         @relation(fields: [carrierId], references: [id])
+  metadata ClaimMetadata?
+  timeline ClaimTimelineEvent[]
+  outcome  ClaimOutcome?
+  attachments Attachment[]
+  reports  Report[]
+
+  @@map("claims")
+}
+
+model ClaimMetadata {
+  id              String      @id @default(cuid())
+  claimId         String      @unique
+  state           String      // US state abbreviation
+  policyType      PolicyType
+  lossType        LossType
+  dateOfLossMonth Int         // 1-12
+  dateOfLossYear  Int
+  propertyType    String?     // e.g., "Single Family", "Condo", "Apartment"
+  occupancy       String?     // e.g., "Owner Occupied", "Rental", "Vacant"
+  mitigationDone  Boolean     @default(false)
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("claim_metadata")
+}
+
+model ClaimTimelineEvent {
+  id             String    @id @default(cuid())
+  claimId        String
+  date           DateTime
+  eventType      EventType
+  notesSanitized String?   @db.Text
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("claim_timeline_events")
+}
+
+model ClaimOutcome {
+  id                   String  @id @default(cuid())
+  claimId              String  @unique
+  initialPaymentAmount Float?
+  finalPaymentAmount   Float?
+  deniedFlag           Boolean @default(false)
+  partialFlag          Boolean @default(false)
+  appraisalFlag        Boolean @default(false)
+  litigationFlag       Boolean @default(false)
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("claim_outcomes")
+}
+
+model Attachment {
+  id         String @id @default(cuid())
+  claimId    String
+  filename   String
+  filetype   String
+  size       Int
+  storageKey String // Placeholder for future file storage integration
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  claimId        String
+  reporterUserId String
+  reason         String       @db.Text
+  status         ReportStatus @default(OPEN)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  claim    Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  reporter User  @relation(fields: [reporterUserId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+model EducationArticle {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  category         String
+  content          String   @db.Text
+  lastReviewedDate DateTime @default(now())
+  published        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("education_articles")
+}
